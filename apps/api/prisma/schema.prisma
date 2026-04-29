@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  repos     Repo[]
+  issues    Issue[]
+  pulls     PullRequest[]
+  comments  Comment[]
+}
+
+model Repo {
+  id        String   @id @default(cuid())
+  name      String
+  owner     String
+  createdAt DateTime @default(now())
+  ownerId   String
+  ownerRef  User     @relation(fields: [ownerId], references: [id])
+  commits   Commit[]
+  issues    Issue[]
+  pulls     PullRequest[]
+
+  @@unique([owner, name])
+}
+
+model Commit {
+  id        String   @id @default(cuid())
+  sha       String   @unique
+  message   String
+  author    String
+  createdAt DateTime @default(now())
+  repoId    String
+  repo      Repo     @relation(fields: [repoId], references: [id])
+}
+
+model Issue {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  repoId    String
+  repo      Repo     @relation(fields: [repoId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  comments  Comment[]
+}
+
+model PullRequest {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  repoId    String
+  repo      Repo     @relation(fields: [repoId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  comments  Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  issueId   String?
+  issue     Issue?   @relation(fields: [issueId], references: [id])
+  pullId    String?
+  pull      PullRequest? @relation(fields: [pullId], references: [id])
+}
