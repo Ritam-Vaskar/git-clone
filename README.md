@@ -2,6 +2,15 @@
 
 A full-stack starter for a GitHub-like platform with Next.js UI, Node.js API, PostgreSQL, and Docker Compose.
 
+## Gitea Git server (required for real repos/commits)
+
+This project reads real repositories and commits from a Gitea server.
+
+1. Start the stack with Docker Compose (includes Gitea).
+2. Open Gitea at http://localhost:3001 and finish the initial setup.
+3. Create the admin user (use the values in apps/api/.env or docker-compose).
+4. Create at least one repository in Gitea so the UI has data.
+
 ## Local setup (Docker)
 
 1. Copy env files:

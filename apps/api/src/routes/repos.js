@@ -1,33 +1,31 @@
 import { Router } from "express";
-import prisma from "../prisma.js";
+import { listRepos, listCommits } from "../services/gitea.js";
 
 const router = Router();
 
 router.get("/", async (_req, res) => {
-  const repos = await prisma.repo.findMany({
-    select: {
-      id: true,
-      name: true,
-      owner: true,
-      createdAt: true
-    }
-  });
-  res.json({ repos });
+  try {
+    const repos = await listRepos();
+    res.json({ repos });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load repos" });
+  }
 });
 
 router.get("/:owner/:name/commits", async (req, res) => {
   const { owner, name } = req.params;
-  const repo = await prisma.repo.findUnique({ where: { owner_name: { owner, name } } });
-  if (!repo) {
-    return res.status(404).json({ error: "Repo not found" });
+  try {
+    const repos = await listRepos();
+    const repo = repos.find((item) => item.owner === owner && item.name === name);
+    if (!repo) {
+      return res.status(404).json({ error: "Repo not found" });
+    }
+
+    const commits = await listCommits(owner, name);
+    res.json({ repo, commits });
+  } catch {
+    res.status(500).json({ error: "Failed to load commits" });
   }
-
-  const commits = await prisma.commit.findMany({
-    where: { repoId: repo.id },
-    orderBy: { createdAt: "desc" }
-  });
-
-  res.json({ repo, commits });
 });
 
 export default router;
