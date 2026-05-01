@@ -47,4 +47,48 @@ export async function listCommits(owner, repo) {
     createdAt: commit.created
   }));
 }
-*** End Patch
+
+export async function listTree(owner, repo, path = "") {
+  requireConfig();
+  const cleanPath = path
+    ? `/${path.split("/").map((part) => encodeURIComponent(part)).join("/")}`
+    : "";
+  const res = await fetch(`${baseUrl}/api/v1/repos/${owner}/${repo}/contents${cleanPath}`, {
+    headers: { Authorization: authHeader() }
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch tree");
+  }
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  return data.map((item) => ({
+    name: item.name,
+    path: item.path,
+    type: item.type,
+    size: item.size
+  }));
+}
+
+export async function fetchFile(owner, repo, path) {
+  requireConfig();
+  const safePath = path.split("/").map((part) => encodeURIComponent(part)).join("/");
+  const res = await fetch(`${baseUrl}/api/v1/repos/${owner}/${repo}/contents/${safePath}`, {
+    headers: { Authorization: authHeader() }
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch file");
+  }
+  const data = await res.json();
+  if (!data || data.type !== "file") {
+    throw new Error("Not a file");
+  }
+  const content = data.content ? Buffer.from(data.content, "base64").toString("utf8") : "";
+  return {
+    name: data.name,
+    path: data.path,
+    size: data.size,
+    content
+  };
+}

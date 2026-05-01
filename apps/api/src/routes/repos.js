@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listRepos, listCommits } from "../services/gitea.js";
+import { listRepos, listCommits, listTree, fetchFile } from "../services/gitea.js";
 
 const router = Router();
 
@@ -25,6 +25,32 @@ router.get("/:owner/:name/commits", async (req, res) => {
     res.json({ repo, commits });
   } catch {
     res.status(500).json({ error: "Failed to load commits" });
+  }
+});
+
+router.get("/:owner/:name/tree", async (req, res) => {
+  const { owner, name } = req.params;
+  const path = typeof req.query.path === "string" ? req.query.path : "";
+  try {
+    const tree = await listTree(owner, name, path);
+    res.json({ tree, path });
+  } catch {
+    res.status(500).json({ error: "Failed to load tree" });
+  }
+});
+
+router.get("/:owner/:name/file", async (req, res) => {
+  const { owner, name } = req.params;
+  const path = typeof req.query.path === "string" ? req.query.path : "";
+  if (!path) {
+    return res.status(400).json({ error: "Missing path" });
+  }
+
+  try {
+    const file = await fetchFile(owner, name, path);
+    res.json({ file });
+  } catch {
+    res.status(500).json({ error: "Failed to load file" });
   }
 });
 

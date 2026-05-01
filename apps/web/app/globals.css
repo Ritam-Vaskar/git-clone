@@ -154,6 +154,37 @@ main {
   font-size: 14px;
 }
 
+.repo-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(320px, 2fr);
+  gap: 16px;
+}
+
+.file-item {
+  cursor: pointer;
+}
+
+.file-panel {
+  min-height: 360px;
+}
+
+.file-content {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 520px;
+}
+
+.muted {
+  color: #5a5a5a;
+}
+
 @keyframes liftIn {
   from {
     opacity: 0;
@@ -174,5 +205,9 @@ main {
   .nav {
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  .repo-grid {
+    grid-template-columns: 1fr;
   }
 }
