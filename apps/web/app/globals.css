@@ -185,6 +185,50 @@ main {
   color: #5a5a5a;
 }
 
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.body-text {
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+.comment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.comment {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.comment-meta {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6b6b6b;
+  margin-bottom: 6px;
+}
+
+.diff-content {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre;
+  background: #0b1220;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 520px;
+}
+
 @keyframes liftIn {
   from {
     opacity: 0;

@@ -1,38 +1,36 @@
 import { Router } from "express";
-import { z } from "zod";
-import { requireAuth } from "../middleware/auth.js";
-import prisma from "../prisma.js";
+import { listIssues, getIssue, listIssueComments } from "../services/gitea.js";
 
 const router = Router();
 
-const issueSchema = z.object({
-  repoId: z.string(),
-  title: z.string().min(3),
-  body: z.string().min(3)
-});
-
-router.get("/", async (_req, res) => {
-  const issues = await prisma.issue.findMany({
-    include: { repo: true, author: true },
-    orderBy: { createdAt: "desc" }
-  });
-  res.json({ issues });
-});
-
-router.post("/", requireAuth, async (req, res) => {
-  const parsed = issueSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid input" });
+router.get("/:owner/:repo", async (req, res) => {
+  const { owner, repo } = req.params;
+  try {
+    const issues = await listIssues(owner, repo);
+    res.json({ issues });
+  } catch {
+    res.status(500).json({ error: "Failed to load issues" });
   }
+});
 
-  const issue = await prisma.issue.create({
-    data: {
-      ...parsed.data,
-      authorId: req.userId || ""
-    }
-  });
+router.get("/:owner/:repo/:index", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const issue = await getIssue(owner, repo, index);
+    res.json({ issue });
+  } catch {
+    res.status(500).json({ error: "Failed to load issue" });
+  }
+});
 
-  res.status(201).json({ issue });
+router.get("/:owner/:repo/:index/comments", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const comments = await listIssueComments(owner, repo, index);
+    res.json({ comments });
+  } catch {
+    res.status(500).json({ error: "Failed to load comments" });
+  }
 });
 
 export default router;

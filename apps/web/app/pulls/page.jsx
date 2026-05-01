@@ -2,7 +2,17 @@ import Link from "next/link";
 import { fetchJson } from "../../lib/api";
 
 export default async function PullsPage() {
-  const data = await fetchJson("/pulls");
+  const reposData = await fetchJson("/repos");
+  const repoList = reposData.repos || [];
+
+  const pullsByRepo = await Promise.all(
+    repoList.map(async (repo) => {
+      const data = await fetchJson(`/pulls/${repo.owner}/${repo.name}`);
+      return data.pulls || [];
+    })
+  );
+
+  const pulls = pullsByRepo.flat();
 
   return (
     <main>
@@ -18,13 +28,17 @@ export default async function PullsPage() {
       <section className="panel">
         <h3>Active pull requests</h3>
         <div className="list">
-          {data.pulls.map((pull) => (
-            <div key={pull.id} className="list-item">
+          {pulls.map((pull) => (
+            <Link
+              key={`${pull.repo.owner}-${pull.repo.name}-${pull.number}`}
+              className="list-item"
+              href={`/pulls/${pull.repo.owner}/${pull.repo.name}/${pull.number}`}
+            >
               <div>
                 {pull.repo.owner}/{pull.repo.name} - {pull.title}
               </div>
-              <span className="badge">{pull.status}</span>
-            </div>
+              <span className="badge">{pull.state}</span>
+            </Link>
           ))}
         </div>
       </section>

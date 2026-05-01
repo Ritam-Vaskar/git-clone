@@ -2,7 +2,17 @@ import Link from "next/link";
 import { fetchJson } from "../../lib/api";
 
 export default async function IssuesPage() {
-  const data = await fetchJson("/issues");
+  const reposData = await fetchJson("/repos");
+  const repoList = reposData.repos || [];
+
+  const issuesByRepo = await Promise.all(
+    repoList.map(async (repo) => {
+      const data = await fetchJson(`/issues/${repo.owner}/${repo.name}`);
+      return data.issues || [];
+    })
+  );
+
+  const issues = issuesByRepo.flat();
 
   return (
     <main>
@@ -18,13 +28,17 @@ export default async function IssuesPage() {
       <section className="panel">
         <h3>Open issues</h3>
         <div className="list">
-          {data.issues.map((issue) => (
-            <div key={issue.id} className="list-item">
+          {issues.map((issue) => (
+            <Link
+              key={`${issue.repo.owner}-${issue.repo.name}-${issue.number}`}
+              className="list-item"
+              href={`/issues/${issue.repo.owner}/${issue.repo.name}/${issue.number}`}
+            >
               <div>
                 {issue.repo.owner}/{issue.repo.name} - {issue.title}
               </div>
-              <span className="badge">{issue.status}</span>
-            </div>
+              <span className="badge">{issue.state}</span>
+            </Link>
           ))}
         </div>
       </section>

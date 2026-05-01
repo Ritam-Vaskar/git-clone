@@ -1,38 +1,62 @@
 import { Router } from "express";
-import { z } from "zod";
-import { requireAuth } from "../middleware/auth.js";
-import prisma from "../prisma.js";
+import {
+  listPulls,
+  getPull,
+  listPullComments,
+  getPullDiff,
+  mergePull
+} from "../services/gitea.js";
 
 const router = Router();
 
-const pullSchema = z.object({
-  repoId: z.string(),
-  title: z.string().min(3),
-  body: z.string().min(3)
-});
-
-router.get("/", async (_req, res) => {
-  const pulls = await prisma.pullRequest.findMany({
-    include: { repo: true, author: true },
-    orderBy: { createdAt: "desc" }
-  });
-  res.json({ pulls });
-});
-
-router.post("/", requireAuth, async (req, res) => {
-  const parsed = pullSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid input" });
+router.get("/:owner/:repo", async (req, res) => {
+  const { owner, repo } = req.params;
+  try {
+    const pulls = await listPulls(owner, repo);
+    res.json({ pulls });
+  } catch {
+    res.status(500).json({ error: "Failed to load pulls" });
   }
+});
 
-  const pull = await prisma.pullRequest.create({
-    data: {
-      ...parsed.data,
-      authorId: req.userId || ""
-    }
-  });
+router.get("/:owner/:repo/:index", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const pull = await getPull(owner, repo, index);
+    res.json({ pull });
+  } catch {
+    res.status(500).json({ error: "Failed to load pull" });
+  }
+});
 
-  res.status(201).json({ pull });
+router.get("/:owner/:repo/:index/comments", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const comments = await listPullComments(owner, repo, index);
+    res.json({ comments });
+  } catch {
+    res.status(500).json({ error: "Failed to load comments" });
+  }
+});
+
+router.get("/:owner/:repo/:index/diff", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const diff = await getPullDiff(owner, repo, index);
+    res.json({ diff });
+  } catch {
+    res.status(500).json({ error: "Failed to load diff" });
+  }
+});
+
+router.post("/:owner/:repo/:index/merge", async (req, res) => {
+  const { owner, repo, index } = req.params;
+  try {
+    const result = await mergePull(owner, repo, index);
+    res.json({ result });
+  } catch {
+    res.status(500).json({ error: "Failed to merge" });
+  }
 });
 
 export default router;
