@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { fetchJson } from "../lib/api";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   let repos = [];
   try {
